@@ -5,7 +5,12 @@ public class Person {
     public String firstName;
     public String middleName;
     public String lastName;
-    private String socialSecurityNumber;
+    protected final String socialSecurityNumber;
+
+    @Override
+    public String toString() {
+        return "firstName = " + firstName + ", middleName = " + middleName + ", lastName = " + lastName + ", socialSecurityNumber = " + socialSecurityNumber;
+    }
 
     //Constructor
     public Person(String firstName, String middleName, String lastName, String socialSecurityNumber) {
@@ -13,5 +18,9 @@ public class Person {
         this.middleName = middleName;
         this.lastName = lastName;
         this.socialSecurityNumber = socialSecurityNumber;
+
+
     }
+
+
 }

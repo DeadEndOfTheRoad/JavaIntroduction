@@ -3,46 +3,60 @@ package net.princesotry_;
 import net.princesotry_.banking.Bank;
 import net.princesotry_.banking.Person;
 
-import java.util.HashMap;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
 
     static Bank javaBank = setBank();
     static boolean loggedIn = false;
+    static Person temporaryPerson = null;
+
+    //Setter for temporaryPerson
+    public static void setTemporaryPerson(Person temporaryPerson) {
+        Main.temporaryPerson = temporaryPerson;
+    }
+
+    //Setter for loggedIn
+    public static void setLoggedIn(boolean loggedIn) {
+        Main.loggedIn = loggedIn;
+    }
 
     public static Scanner scanner = new Scanner(System.in);
     public static void main(String[] args) {
+
         javaBank.addBotAccounts();
+
 
         //The program
         while(true) {
-            outputBank(javaBank);
-            System.out.println("Welcome to the Java Industry Bank!");
-            askForSignUpOrLogIn(loggedIn);
-            if(loggedIn) {
-                //
+            while(loggedIn) {
+                Bank.askForLogOutOrInteractWithAccount();
             }
+            System.out.println("Welcome to the Java Industry Bank!");
+            askForSignUpOrLogIn();
+
         }
 
     }
 
 
-    public static void askForSignUpOrLogIn(boolean loggedIn) {
+    public static void askForSignUpOrLogIn() {
         System.out.println("Would you like to:\na) Log in\nb) Sign up\n\n Please enter either a or b :)");
         String choice = scanner.nextLine();
-        System.out.println((String)choice);
-        if (validateStringInput(choice, "a", "b")) {
-            if (choice.equals("a")) {
-                Bank.logInProcedure();
-            } else {
-                Person temporaryPerson = createNewProfile();
+        System.out.println(choice);
+        if (validateStringInput(choice, "a", "b", null)) {
+            if (choice.equalsIgnoreCase("a")) {
+                Bank.logInProcedure(javaBank);
+            } else if (choice.equalsIgnoreCase("b")) {
+                createNewProfile();
                 askForInitialDeposit(temporaryPerson);
-                loggedIn = true;
+                setTemporaryPerson(null);
+            } else {
+                System.out.println("Invalid input, please enter a or b.");
             }
         } else {
             System.out.println("Invalid input, please enter a or b.");
-            askForSignUpOrLogIn(loggedIn);
+            askForSignUpOrLogIn();
         }
     }
 
@@ -50,15 +64,17 @@ public class Main {
 
 
     public static void askForInitialDeposit(Person person) {
-        System.out.println("Please enter your initial deposit, minimum deposit is £100.00.");
-        double deposit = scanner.nextDouble();
-        scanner.nextLine();
-        if(deposit >= 100) {
-            System.out.println("Thank you for choosing JavaBank");
-            Bank.addProfileAndAccount(javaBank, person, Bank.createNewAccount(deposit));
-        } else {
-            System.out.println("Sorry the minimum deposit is £100.00");
-            askForInitialDeposit(person);
+        if(temporaryPerson != null) {
+            System.out.println("Please enter your initial deposit, minimum deposit is £100.00.");
+            double deposit = scanner.nextDouble();
+            scanner.nextLine();
+            if(deposit >= 100) {
+                System.out.println("Thank you for choosing JavaBank");
+                Bank.addProfileAndAccount(javaBank, person, Bank.createNewAccount(deposit));
+            } else {
+                System.out.println("Sorry the minimum deposit is £100.00");
+                askForInitialDeposit(person);
+            }
         }
     }
 
@@ -69,12 +85,13 @@ public class Main {
     }
 
 
-    public static boolean validateStringInput(String choice, String correctChoice1, String correctChoice2) {
-        return choice.equals(correctChoice1) || choice.equals(correctChoice2);
+    public static boolean validateStringInput(String choice, String correctChoice1, String correctChoice2, String correctChoice3) {
+        return choice.equalsIgnoreCase(correctChoice1) || choice.equalsIgnoreCase(correctChoice2) || choice.equalsIgnoreCase(correctChoice3);
     }
 
 
-    public static Person createNewProfile() {
+    public static void createNewProfile() {
+        boolean foundSameSSN = false;
         System.out.println("Enter your first name");
         String firstName = scanner.nextLine();
         System.out.println("Enter your middle name");
@@ -83,13 +100,24 @@ public class Main {
         String lastName = scanner.nextLine();
         System.out.println("Enter your social security number");
         String socialSecurityNumber = scanner.nextLine();
-
-       return new Person(firstName, middleName, lastName, socialSecurityNumber);
+        for (Person person: javaBank.customersAndAccounts.keySet()) {
+            if(javaBank.getSocialSecurityNumber(person).equalsIgnoreCase(socialSecurityNumber) && !foundSameSSN) {
+                System.out.println("Sorry, that social security number already has an account.");
+                setTemporaryPerson(null);
+                foundSameSSN = true;
+            } else if(foundSameSSN) {
+                //
+            } else {
+                setTemporaryPerson(new Person(firstName, middleName, lastName, socialSecurityNumber));
+            }
+        }
     }
 
     public static void outputBank(Bank bank) {
-        for (Person person: javaBank.customersAndAccounts.keySet()) {
-            System.out.println(javaBank.customersAndAccounts.get(person) + " --> " + "insert Key");
+        for (Person person: bank.customersAndAccounts.keySet()) {
+
+            Set<Person> key = Bank.getKey(bank, person);
+            System.out.println(key + " --> " + bank.customersAndAccounts.get(person));
         }
         }
     }
